@@ -5,47 +5,58 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>The Garden</title>
   <meta name="description" content="An interactive map of a home garden, with photos of the plants in each bed.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="site-header">
-    <p class="eyebrow">Featured on the garden tour</p>
+    <p class="eyebrow">On the garden tour</p>
     <h1>The Garden</h1>
-    <p class="lede">Explore the yard bed by bed. <span class="hint-hover">Hover over</span><span class="hint-tap">Tap</span> an area of the map to see what grows there, then choose a plant to see its photos.</p>
+    <p class="lede">A shady, tree-filled yard. <span class="hint-hover">Hover over</span><span class="hint-tap">Tap</span> an area of the map to see what grows there, then choose a plant to see its photos.</p>
   </header>
 
-  <main class="layout">
-    <section class="map-wrap" aria-label="Garden map">
-      <figure class="map">
-        <svg id="map" viewBox="0 0 640 470" role="group" aria-label="Map of the garden sections">
+  <main class="wrap">
+    <nav class="pills" id="pills" aria-label="Garden areas"></nav>
+
+    <figure class="map">
+      <div class="map-frame">
+        <svg id="map" viewBox="0 0 640 470" role="group" aria-label="Map of the garden areas">
           <image href="images/yard-satellite.jpg" x="0" y="0" width="640" height="470" />
           <g id="sections"></g>
         </svg>
-        <figcaption class="attribution">Imagery ©2026 Airbus, Maxar Technologies, Vexcel Imaging US, Inc. · Map data ©2026 Google</figcaption>
-      </figure>
-      <ul class="legend" id="legend" aria-label="Garden sections"></ul>
-    </section>
+        <div class="peek" id="peek" hidden>
+          <p class="peek-title" id="peek-title"></p>
+          <ul class="peek-list" id="peek-list"></ul>
+          <p class="peek-more" id="peek-more"></p>
+        </div>
+      </div>
+      <figcaption class="attribution">Imagery ©2026 Airbus, Maxar Technologies, Vexcel Imaging US, Inc. · Map data ©2026 Google</figcaption>
+    </figure>
 
-    <aside class="panel" id="panel" aria-live="polite">
-      <div class="panel-empty" id="panel-empty">
+    <section class="area" id="area" aria-live="polite">
+      <div class="area-empty" id="area-empty">
         <h2>Pick a spot on the map</h2>
         <p>Each outlined area is a part of the garden. Choose one to see its plants.</p>
       </div>
-      <div class="panel-body" id="panel-body" hidden>
-        <h2 id="panel-title"></h2>
-        <p class="panel-blurb" id="panel-blurb"></p>
-        <ul class="plant-list" id="plant-list"></ul>
+      <div id="area-body" hidden>
+        <div class="area-head">
+          <h2 id="area-title"></h2>
+          <p id="area-blurb"></p>
+        </div>
+        <ul class="cards" id="cards"></ul>
       </div>
-    </aside>
+    </section>
+
+    <section class="all-plants" aria-labelledby="all-title">
+      <h2 id="all-title">Every plant in the garden</h2>
+      <ul class="az" id="az"></ul>
+    </section>
   </main>
 
-  <section class="all-plants" aria-labelledby="all-title">
-    <h2 id="all-title">All plants, A to Z</h2>
-    <ul class="az" id="az"></ul>
-  </section>
-
   <footer class="site-footer">
-    <p>Photos and garden by the gardener. Map imagery from Google.</p>
+    <p>Garden and photos by the gardener. Map imagery from Google.</p>
   </footer>
 
   <dialog id="viewer" aria-labelledby="viewer-title">

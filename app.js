@@ -4,13 +4,18 @@
   const SECTIONS = window.GARDEN_SECTIONS || [];
   const PHOTO_DIR = "images/plants/";
   const SVG_NS = "http://www.w3.org/2000/svg";
+  const PEEK_MAX = 8;
 
   const $ = (id) => document.getElementById(id);
   const sectionById = Object.fromEntries(SECTIONS.map((s) => [s.id, s]));
+  const canHover = window.matchMedia("(hover: hover)").matches;
 
   let plants = [];
-  let pinned = null; // section chosen by click/tap
-  const canHover = window.matchMedia("(hover: hover)").matches;
+  let pinned = null;
+
+  const LEAF_SVG =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">' +
+    '<path d="M5 19c0-8 5-13 14-14-1 9-6 14-14 14z"/><path d="M5 19l8-8"/></svg>';
 
   // ---------- CSV ----------
   function parseCSV(text) {
@@ -46,17 +51,19 @@
     };
   }
 
+  const plantsIn = (id) => plants.filter((p) => p.section === id);
+
   // ---------- Map ----------
   function centroid(points) {
     const pts = points.trim().split(/\s+/).map((p) => p.split(",").map(Number));
-    const x = pts.reduce((a, p) => a + p[0], 0) / pts.length;
-    const y = pts.reduce((a, p) => a + p[1], 0) / pts.length;
-    return [x, y];
+    return [
+      pts.reduce((a, p) => a + p[0], 0) / pts.length,
+      pts.reduce((a, p) => a + p[1], 0) / pts.length
+    ];
   }
 
   function drawSections() {
     const g = $("sections");
-    const legend = $("legend");
     SECTIONS.forEach((s) => {
       const poly = document.createElementNS(SVG_NS, "polygon");
       poly.setAttribute("points", s.points);
@@ -68,6 +75,7 @@
       g.appendChild(poly);
 
       const [cx, cy] = centroid(s.points);
+      s.cx = cx;
       const label = document.createElementNS(SVG_NS, "text");
       label.setAttribute("x", cx);
       label.setAttribute("y", cy);
@@ -77,86 +85,131 @@
       label.textContent = s.name;
       g.appendChild(label);
 
-      poly.addEventListener("click", () => pin(s.id));
+      poly.addEventListener("click", () => pin(s.id, true));
       poly.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pin(s.id); }
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pin(s.id, true); }
       });
       if (canHover) {
-        poly.addEventListener("mouseenter", () => show(s.id));
-        poly.addEventListener("mouseleave", () => show(pinned));
+        poly.addEventListener("mouseenter", () => { highlight(s.id); peek(s.id); });
+        poly.addEventListener("mouseleave", () => { highlight(pinned); peek(null); });
       }
+    });
+  }
 
-      const li = document.createElement("li");
+  function drawPills() {
+    const nav = $("pills");
+    nav.innerHTML = "";
+    SECTIONS.forEach((s) => {
       const btn = document.createElement("button");
       btn.type = "button";
-      btn.textContent = s.name;
+      btn.className = "pill";
       btn.dataset.id = s.id;
-      btn.addEventListener("click", () => pin(s.id));
-      li.appendChild(btn);
-      legend.appendChild(li);
+      btn.textContent = s.name;
+      const n = plantsIn(s.id).length;
+      if (n) {
+        const c = document.createElement("span");
+        c.className = "count";
+        c.textContent = n;
+        btn.appendChild(c);
+      }
+      btn.addEventListener("click", () => pin(s.id, false));
+      nav.appendChild(btn);
     });
+    highlight(pinned);
   }
 
-  function pin(id) {
-    pinned = id;
-    show(id);
-    if (!canHover && window.innerWidth <= 820) {
-      $("panel").scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  }
-
-  // ---------- Panel ----------
-  function show(id) {
-    document.querySelectorAll(".section-shape, .legend button").forEach((el) => {
+  function highlight(id) {
+    document.querySelectorAll(".section-shape, .pill").forEach((el) => {
       el.classList.toggle("active", el.dataset.id === id);
     });
-    const s = id && sectionById[id];
-    $("panel-empty").hidden = !!s;
-    $("panel-body").hidden = !s;
-    if (!s) return;
-
-    $("panel-title").textContent = s.name;
-    $("panel-blurb").textContent = s.blurb || "";
-    const list = $("plant-list");
-    list.innerHTML = "";
-    const inSection = plants.filter((p) => p.section === id);
-    if (!inSection.length) {
-      const li = document.createElement("li");
-      li.className = "panel-blurb";
-      li.textContent = "No plants listed here yet.";
-      list.appendChild(li);
-      return;
-    }
-    inSection.forEach((p) => list.appendChild(plantRow(p)));
   }
 
-  function plantRow(p) {
+  // Hover preview: quick list of plant names on the map itself
+  function peek(id) {
+    const box = $("peek");
+    const s = id && sectionById[id];
+    if (!s) { box.hidden = true; return; }
+    const list = plantsIn(id);
+    $("peek-title").textContent = s.name;
+    const ul = $("peek-list");
+    ul.innerHTML = "";
+    list.slice(0, PEEK_MAX).forEach((p) => {
+      const li = document.createElement("li");
+      li.textContent = p.name;
+      ul.appendChild(li);
+    });
+    if (!list.length) {
+      const li = document.createElement("li");
+      li.textContent = "No plants listed yet";
+      ul.appendChild(li);
+    }
+    $("peek-more").textContent =
+      list.length > PEEK_MAX ? `+ ${list.length - PEEK_MAX} more · click to see all` : "Click to see photos";
+    box.classList.toggle("left", s.cx >= 320);
+    box.classList.toggle("right", s.cx < 320);
+    box.hidden = false;
+  }
+
+  function pin(id, fromMap) {
+    pinned = id;
+    highlight(id);
+    peek(null);
+    showArea(id);
+    if (fromMap || window.innerWidth <= 860) {
+      $("area").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+
+  // ---------- Selected area ----------
+  function showArea(id) {
+    const s = id && sectionById[id];
+    $("area-empty").hidden = !!s;
+    $("area-body").hidden = !s;
+    if (!s) return;
+    $("area-title").textContent = s.name;
+    $("area-blurb").textContent = s.blurb || "";
+    const cards = $("cards");
+    cards.innerHTML = "";
+    const list = plantsIn(id);
+    if (!list.length) {
+      const li = document.createElement("li");
+      li.className = "empty-note";
+      li.textContent = "No plants listed here yet.";
+      cards.appendChild(li);
+      return;
+    }
+    list.forEach((p) => cards.appendChild(card(p)));
+  }
+
+  function card(p) {
     const li = document.createElement("li");
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.className = "plant-btn";
-    btn.innerHTML =
-      thumbHTML(p) +
-      '<span><span class="plant-name"></span><span class="plant-botanical"></span></span>' +
-      '<span class="plant-count"></span>';
-    btn.querySelector(".plant-name").textContent = p.name;
-    btn.querySelector(".plant-botanical").textContent = p.botanical;
-    btn.querySelector(".plant-count").textContent =
-      p.photos.length ? `${p.photos.length} photo${p.photos.length > 1 ? "s" : ""}` : "photo soon";
+    btn.className = "card";
+    const photo = document.createElement("span");
+    photo.className = "card-photo";
+    if (p.photos.length) {
+      const img = document.createElement("img");
+      img.loading = "lazy";
+      img.alt = "";
+      img.src = PHOTO_DIR + "thumbs/" + p.photos[0];
+      img.onerror = () => { img.onerror = null; img.src = PHOTO_DIR + p.photos[0]; };
+      photo.appendChild(img);
+    } else {
+      photo.innerHTML = LEAF_SVG;
+    }
+    const name = document.createElement("span");
+    name.className = "card-name";
+    name.textContent = p.name;
+    const bot = document.createElement("span");
+    bot.className = "card-botanical";
+    bot.textContent = p.botanical;
+    const text = document.createElement("span");
+    text.append(name, bot);
+    btn.append(photo, text);
     btn.addEventListener("click", () => openViewer(p));
     li.appendChild(btn);
     return li;
-  }
-
-  const LEAF_SVG =
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">' +
-    '<path d="M5 19c0-8 5-13 14-14-1 9-6 14-14 14z"/><path d="M5 19l8-8"/></svg>';
-
-  function thumbHTML(p) {
-    if (p.photos.length) {
-      return `<img class="thumb" loading="lazy" alt="" src="${encodeURI(PHOTO_DIR + "thumbs/" + p.photos[0])}" onerror="this.onerror=null;this.src='${encodeURI(PHOTO_DIR + p.photos[0])}'">`;
-    }
-    return `<span class="thumb placeholder">${LEAF_SVG}</span>`;
   }
 
   // ---------- A to Z ----------
@@ -197,13 +250,13 @@
   function renderPhoto() {
     const stage = $("viewer-stage");
     const n = current.photos.length;
+    stage.innerHTML = "";
     if (!n) {
       stage.innerHTML = `<div class="placeholder">${LEAF_SVG}<p>Photo coming soon</p></div>`;
     } else {
       const img = document.createElement("img");
       img.src = PHOTO_DIR + current.photos[index];
       img.alt = `${current.name}, photo ${index + 1} of ${n}`;
-      stage.innerHTML = "";
       stage.appendChild(img);
     }
     document.querySelector(".viewer-nav").hidden = n < 2;
@@ -239,15 +292,17 @@
 
   // ---------- Start ----------
   drawSections();
+  drawPills();
   fetch("data/plants.csv", { cache: "no-cache" })
     .then((r) => { if (!r.ok) throw new Error(r.status); return r.text(); })
     .then((text) => {
       plants = parseCSV(text).map(toPlant);
+      drawPills();
       drawAZ();
-      show(pinned);
+      showArea(pinned);
     })
     .catch(() => {
-      $("panel-empty").innerHTML =
+      $("area-empty").innerHTML =
         "<h2>Plant list not found</h2><p>Check that data/plants.csv is uploaded with the site.</p>";
     });
 })();
