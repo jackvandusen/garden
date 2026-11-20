@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Garden</title>
+  <meta name="description" content="An interactive map of a home garden, with photos of the plants in each bed.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <p class="eyebrow">Featured on the garden tour</p>
+    <h1>The Garden</h1>
+    <p class="lede">Explore the yard bed by bed. <span class="hint-hover">Hover over</span><span class="hint-tap">Tap</span> an area of the map to see what grows there, then choose a plant to see its photos.</p>
+  </header>
+
+  <main class="layout">
+    <section class="map-wrap" aria-label="Garden map">
+      <figure class="map">
+        <svg id="map" viewBox="0 0 640 470" role="group" aria-label="Map of the garden sections">
+          <image href="images/yard-satellite.jpg" x="0" y="0" width="640" height="470" />
+          <g id="sections"></g>
+        </svg>
+        <figcaption class="attribution">Imagery ©2026 Airbus, Maxar Technologies, Vexcel Imaging US, Inc. · Map data ©2026 Google</figcaption>
+      </figure>
+      <ul class="legend" id="legend" aria-label="Garden sections"></ul>
+    </section>
+
+    <aside class="panel" id="panel" aria-live="polite">
+      <div class="panel-empty" id="panel-empty">
+        <h2>Pick a spot on the map</h2>
+        <p>Each outlined area is a part of the garden. Choose one to see its plants.</p>
+      </div>
+      <div class="panel-body" id="panel-body" hidden>
+        <h2 id="panel-title"></h2>
+        <p class="panel-blurb" id="panel-blurb"></p>
+        <ul class="plant-list" id="plant-list"></ul>
+      </div>
+    </aside>
+  </main>
+
+  <section class="all-plants" aria-labelledby="all-title">
+    <h2 id="all-title">All plants, A to Z</h2>
+    <ul class="az" id="az"></ul>
+  </section>
+
+  <footer class="site-footer">
+    <p>Photos and garden by the gardener. Map imagery from Google.</p>
+  </footer>
+
+  <dialog id="viewer" aria-labelledby="viewer-title">
+    <div class="viewer-inner">
+      <button class="viewer-close" id="viewer-close" aria-label="Close">×</button>
+      <div class="viewer-stage" id="viewer-stage"></div>
+      <div class="viewer-nav">
+        <button id="viewer-prev" aria-label="Previous photo">‹</button>
+        <span id="viewer-count"></span>
+        <button id="viewer-next" aria-label="Next photo">›</button>
+      </div>
+      <h3 id="viewer-title"></h3>
+      <p class="viewer-botanical" id="viewer-botanical"></p>
+      <p class="viewer-notes" id="viewer-notes"></p>
+    </div>
+  </dialog>
+
+  <script src="data/sections.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
