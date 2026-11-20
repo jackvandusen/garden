@@ -1,0 +1,11 @@
+section,common_name,botanical_name,notes,photos
+front,Example plant A,Genus species,Replace these rows with real plants.,
+front,Example plant B,Genus species,,
+front,Example plant C,,,
+west,Example plant D,Genus species,Notes can say when it was planted or where it came from.,
+west,Example plant E,,,
+north,Example plant F,Genus species,,
+north,Example plant G,,,
+east,Example plant H,Genus species,,
+corner,Example plant I,Genus species,Photos go in images/plants/ — list file names separated by semicolons.,
+corner,Example plant J,,,
