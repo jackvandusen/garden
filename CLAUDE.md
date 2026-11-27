@@ -83,5 +83,8 @@ Each area has `id`, `name`, `blurb` and `points`, which are x,y pixel corners of
 Use whichever works in the current session:
 
 1. **Browser (how it has been done so far):** with the owner signed in to GitHub in the browser Claude can control, open `https://github.com/jackvandusen/garden/upload/main` (add `/data`, `/images/plants` and so on to the URL for subfolders), upload the changed files, add a short commit message and click **Commit changes**. Then wait about a minute and check the live site. Uploads are limited to a few MB per batch, so send photos in small batches.
-2. **If Claude can't control a browser:** prepare the finished files, give them to the owner, and walk him through the same upload page step by step. Tell him exactly which folder each file goes in.
+2. **If Claude can't control a browser (for example, on the free Claude plan):** do all the preparation, and give the owner short, exact steps:
+   - **Text changes (plant list, area names, wording):** give him the complete new file contents in one code block. He opens the file on GitHub (for example `https://github.com/jackvandusen/garden/edit/main/data/plants.csv`), selects everything in the editor, pastes, and clicks **Commit changes**. Always give the whole file, never a partial snippet.
+   - **Photos:** resize them, make thumbnails and strip the GPS data, then give him a zip with the folder structure already in place (`images/plants/...` and `images/plants/thumbs/...`). He unzips it, opens `https://github.com/jackvandusen/garden/upload/main`, drags the `images` folder onto the page (GitHub keeps the folders), and clicks **Commit changes**. Work in batches of about 10–20 photos so each step stays small.
+   - Tell him what to expect: the site updates in a minute or two; refresh the page to see it.
 3. Never ask for, or type in, his GitHub password. He signs in himself.
